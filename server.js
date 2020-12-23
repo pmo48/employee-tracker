@@ -1,3 +1,5 @@
+
+// Required node modules - mysql for db handling, inquirer for prompts and console.table for formatting
 var mysql = require("mysql");
 var inquirer = require("inquirer");
 const cTable = require('console.table')
@@ -24,7 +26,7 @@ connection.connect(function(err) {
   start();
 });
 
-// function which prompts the user for what action they should take
+// first question which prompts the user which area they're interested in
 function start() {
   inquirer
     .prompt({
@@ -53,9 +55,9 @@ function start() {
     });
 }
 
-// function to handle posting new items up for auction
+// First submenu to handle all department actions
 function departmentQs() {
-  // prompt for info about the item being put up for auction
+  // prompt for which department action to take
   inquirer
     .prompt({
       name: "departmentActions",
@@ -64,7 +66,7 @@ function departmentQs() {
       choices: ["Add Department", "View All Departments", "Delete Departments", "Main Menu", "Exit"]
     })
     .then(function(answer) {
-      // based on their answer, either call the bid or the post functions
+      // based on their answer, redirects to matching function/inqurier steps
       if (answer.departmentActions === "Add Department") {
         addDepartment();
       }
@@ -74,15 +76,19 @@ function departmentQs() {
       else if(answer.departmentActions === "Delete Departments") {
         deleteDepartments();
       }
+      // Returns to the main menu
       else if(answer.departmentActions === "Main Menu") {
         start();
       } 
+
+      // Closes application if exist is selected
       else{
         connection.end();
       }
     });
 }
 
+// Adds department by asking for new department name then inserting name into department table
 function addDepartment () {
   inquirer
     .prompt([
@@ -91,7 +97,6 @@ function addDepartment () {
         type: "input",
         message: "Department Name:"
       }]).then(function(answer) {
-        // when finished prompting, insert a new item into the db with that info
         connection.query(
           "INSERT INTO department SET ?",
           {
@@ -100,12 +105,15 @@ function addDepartment () {
           function(err) {
             if (err) throw err;
             console.log("Your department was added successfully!");
+
+            //redirects back to submenu for more department processing
             departmentQs();
           }
         )
       });
     }
 
+//view all departments via select statement on department table
 function viewAllDepartments () {
   connection.query("SELECT * FROM department", function(err, results) {
     if (err) throw err;
@@ -113,7 +121,7 @@ function viewAllDepartments () {
     departmentQs();
 });
 }
-
+//view all departments via select statement on department table to choose department, then delete statement to delete the department
 function deleteDepartments() {
   connection.query("SELECT name FROM department", function(err, results) {
     if (err) throw err;
@@ -145,6 +153,7 @@ function deleteDepartments() {
     })
 };
 
+// second submenu to handle all role actions
 function rolesQs() {
   // prompt for info about the item being put up for auction
   inquirer
@@ -177,6 +186,7 @@ function rolesQs() {
     });
 }
 
+// Adds role by asking for new role name, salary and which department to associate, then inserts into role table
 function addRoles () {
   connection.query("SELECT * FROM department", function(err, results) {
     if (err) throw err;
@@ -228,6 +238,7 @@ function addRoles () {
     });
   }
 
+// Adds role by asking for role to update, then updated name, salary and which department to associate, then updates into role table
 function updateRoles () {
   connection.query("SELECT * FROM department", function(err, results2) {
     if (err) throw err;
@@ -297,6 +308,7 @@ function updateRoles () {
     });
   };
 
+// Queries role table
 function viewAllRoles () {
   connection.query("SELECT title, salary, name FROM role LEFT JOIN department ON role.department_id = department.id;", function(err, results) {
     if (err) throw err;
@@ -305,6 +317,7 @@ function viewAllRoles () {
 });
 }
 
+// Selects all roles and presents them to user to select which one to delete, then deletes with delete where selected
 function deleteRoles() {
   connection.query("SELECT * FROM role", function(err, results) {
     if (err) throw err;
@@ -337,6 +350,7 @@ function deleteRoles() {
     })
 };
 
+// third submenu to handle all employee actions
 function employeeQs() {
   inquirer
   .prompt({
@@ -370,6 +384,7 @@ function employeeQs() {
   });
 }
 
+// Adds new employee, asks for name and presents role options before inserting selections into employee table
 function addEmployee () {
   connection.query("SELECT first_name, last_name, id FROM employee", function(err, results2) {
     if (err) throw err;
@@ -441,6 +456,8 @@ function addEmployee () {
     });
   });
 };
+
+// Asks which employee to update, then asks for fields to update before executing update script on selected employee
 function updateEmployee () {
   connection.query("SELECT * FROM role", function(err, results2) {
     if (err) throw err;
@@ -530,7 +547,7 @@ function updateEmployee () {
       });
   });
 };
-
+// Select all statement with role table join on employee table
 function viewAllEmployees() {
   connection.query("SELECT first_name as 'First Name', last_name as 'Last Name', title as Title, name as Department, salary as Salary from employee LEFT JOIN role ON employee.role_id = role.id LEFT JOIN department ON role.department_id = department.id ORDER BY name", function(err, results) {
     if (err) throw err;
@@ -539,6 +556,7 @@ function viewAllEmployees() {
 });
 }
 
+// Select view all employees with manager using a self join on employees table
 function viewAllEmployeeswithManagers() {
   connection.query("SELECT emp.first_name as 'Employee First Name', emp.last_name as 'Employee Last Name', manager.first_name as 'Manager First Name', manager.last_name as 'Manager Last Name' FROM employee emp JOIN employee manager ON emp.manager_id = manager.id ORDER BY manager.last_name", function(err, results) {
     if (err) throw err;
@@ -547,6 +565,7 @@ function viewAllEmployeeswithManagers() {
 });
 }
 
+//presents option to select which employees will be deleted, then run delete script to delete employee
 function deleteEmployees() {
   connection.query("SELECT * FROM employee", function(err, results) {
     if (err) throw err;
@@ -584,6 +603,7 @@ function deleteEmployees() {
     })
 };
 
+// fourth submenu to handle all budgetary queries
 function budgetQs () {
   inquirer
   .prompt({
@@ -612,6 +632,7 @@ function budgetQs () {
   });
 }
 
+// Total spend by department using joins and derived tables
 function totalDepartment() {
   connection.query("SELECT Department, SUM(SalaryTotal) as 'Total Spend by Department' FROM ( SELECT title as Title, SUM(salary) as SalaryTotal, name as Department FROM employee LEFT JOIN role ON employee.role_id = role.id LEFT JOIN department ON role.department_id = department.id GROUP BY role_id) derived_salaries GROUP BY Department ORDER BY SUM(SalaryTotal) DESC", function(err, results) {
     if (err) throw err;
@@ -620,6 +641,7 @@ function totalDepartment() {
 });
 }
 
+// Total spend by role using joins and derived tables
 function totalRole() {
   connection.query("SELECT Title, SUM(SalaryTotal) as 'Total Spend by Role' FROM ( SELECT title as Title, SUM(salary) as SalaryTotal, name as Department FROM employee LEFT JOIN role ON employee.role_id = role.id LEFT JOIN department ON role.department_id = department.id GROUP BY role_id) derived_salaries GROUP BY Title ORDER BY SUM(SalaryTotal) DESC", function(err, results) {
     if (err) throw err;
@@ -628,6 +650,7 @@ function totalRole() {
 });
 }
 
+// Total spend by role using joins and derived tables
 function highestSalary() {
   connection.query("SELECT title as Title, name as Department, salary as Salary FROM role LEFT JOIN department ON role.department_id = department.id ORDER BY salary DESC", function(err, results) {
     if (err) throw err;
