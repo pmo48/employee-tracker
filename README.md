@@ -20,7 +20,7 @@ For admins or owners that need to keep track of a lot of employee information. T
 - Clone github repo at [pmo48/employee-tracker](https://github.com/pmo48/employee-tracker)
 - Clone to appropriate directory
 - Install npm dependecies
-- Run "seed.sql" in MySql to install DB and load EE names
+- Run "schema.sql" in MySql to install DB and initialize a few EE names (note: you will need to add managers to employees either using the app or via MySql)
 - Type "node server" to launch the application"
     
 ## Usage
