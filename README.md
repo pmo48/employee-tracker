@@ -11,7 +11,7 @@
     
 ## Description
     
-For admins or owners that need to keep track of a lot of employee information. This app allows users to  
+For admins or owners that need to keep track of a lot of employee information. 
 
 ![node_employee_tracker](node_ET.png)
     
